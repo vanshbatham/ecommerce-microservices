@@ -1,15 +1,13 @@
 spring:
   application:
     name: config-server
-server:
-  port: 8888
-
-
   cloud:
     config:
       server:
         git:
-          # Notice the file:// prefix. This tells Spring it's a local folder, not a web URL.
+          # Points to your local config folder
           uri: file:///D:/Vansh/Projects/ecommerce-microservices-platform/config-repo
-          # We set this to true so it doesn't fail if we haven't committed configurations yet
           clone-on-start: true
+
+server:
+  port: 8888
