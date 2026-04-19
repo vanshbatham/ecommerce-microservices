@@ -5,7 +5,7 @@ spring:
   datasource:
     url: jdbc:mysql://localhost:3306/ecommerce_user
     username: root
-    password: Vansh@sql16 # Replace with your local MySQL password
+    password: Vansh@sql16
   jpa:
     hibernate:
       ddl-auto: update
