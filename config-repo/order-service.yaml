@@ -6,6 +6,7 @@ spring:
     url: jdbc:mysql://localhost:3306/ecommerce_order
     username: root
     password: Vansh@sql16
+  jpa:
     hibernate:
       ddl-auto: update
     show-sql: true

@@ -12,5 +12,7 @@ public interface ProductService {
 
     List<ProductResponse> getAllProducts();
 
-    void reduceStock(Long productId, Integer quantity);
+    ProductResponse getProductBySku(String sku);
+
+    void reduceStock(String sku, Integer quantity);
 }

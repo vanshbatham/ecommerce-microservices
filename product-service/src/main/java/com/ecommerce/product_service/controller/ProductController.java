@@ -29,14 +29,19 @@ public class ProductController {
         return new ResponseEntity<>(productService.getProductById(id), HttpStatus.OK);
     }
 
+    @GetMapping("/sku/{sku}")
+    public ResponseEntity<ProductResponse> getProductBySku(@PathVariable String sku) {
+        return new ResponseEntity<>(productService.getProductBySku(sku), HttpStatus.OK);
+    }
+
     @GetMapping
     public ResponseEntity<List<ProductResponse>> getAllProducts() {
         return new ResponseEntity<>(productService.getAllProducts(), HttpStatus.OK);
     }
     
-    @PutMapping("/{id}/reduce-stock")
-    public ResponseEntity<Void> reduceStock(@PathVariable Long id, @RequestParam Integer quantity) {
-        productService.reduceStock(id, quantity);
+    @PutMapping("/sku/{sku}/reduce-stock")
+    public ResponseEntity<Void> reduceStock(@PathVariable String sku, @RequestParam Integer quantity) {
+        productService.reduceStock(sku, quantity);
         return new ResponseEntity<>(HttpStatus.NO_CONTENT);
     }
 }

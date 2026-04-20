@@ -50,6 +50,14 @@ public class ProductServiceImpl implements ProductService {
     }
 
     @Override
+    public ProductResponse getProductBySku(String sku) {
+        log.info("Fetching product with SKU: {}", sku);
+        Product product = productRepository.findBySku(sku)
+                .orElseThrow(() -> new ResourceNotFoundException("Product not found with SKU: " + sku));
+        return mapToResponse(product);
+    }
+
+    @Override
     public List<ProductResponse> getAllProducts() {
         log.info("Fetching all products");
         return productRepository.findAll().stream()
@@ -59,13 +67,13 @@ public class ProductServiceImpl implements ProductService {
 
     @Override
     @Transactional
-    public void reduceStock(Long productId, Integer quantity) {
-        log.info("Reducing stock for product id: {} by quantity: {}", productId, quantity);
-        Product product = productRepository.findById(productId)
-                .orElseThrow(() -> new ResourceNotFoundException("Product not found with id: " + productId));
+    public void reduceStock(String sku, Integer quantity) {
+        log.info("Reducing stock for SKU: {} by quantity: {}", sku, quantity);
+        Product product = productRepository.findBySku(sku)
+                .orElseThrow(() -> new ResourceNotFoundException("Product not found with SKU: " + sku));
 
         if (product.getStockQuantity() < quantity) {
-            throw new DuplicateResourceException("Insufficient stock for product ID: " + productId);
+            throw new DuplicateResourceException("Insufficient stock for SKU: " + sku);
         }
 
         product.setStockQuantity(product.getStockQuantity() - quantity);
