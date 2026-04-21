@@ -10,3 +10,23 @@ spring:
     hibernate:
       ddl-auto: update
     show-sql: true
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health, info, metrics # exposes Actuator endpoints to check circuit state
+  endpoint:
+    health:
+      show-details: always
+
+resilience4j:
+  circuitbreaker: # configuration for Resilience4j Circuit Breaker
+    instances: # define the circuit breaker instance for the inventory service
+      inventory: # This is the custom name for our circuit breaker
+        registerHealthIndicator: true
+        slidingWindowSize: 5 # looks at the last 5 requests
+        failureRateThreshold: 50 # if 50% (3 out of 5) fail, trip the breaker to OPEN
+        waitDurationInOpenState: 5s # wait 5 seconds before switching to HALF-OPEN to test the target
+        permittedNumberOfCallsInHalfOpenState: 3 # allow 3 test calls in HALF-OPEN state
+        automaticTransitionFromOpenToHalfOpenEnabled: true # automatically transition from OPEN to HALF-OPEN after the wait duration

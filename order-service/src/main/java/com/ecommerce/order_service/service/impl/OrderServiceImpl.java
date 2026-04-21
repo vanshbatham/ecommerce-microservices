@@ -6,11 +6,13 @@ import com.ecommerce.order_service.dto.response.OrderResponse;
 import com.ecommerce.order_service.entity.Order;
 import com.ecommerce.order_service.entity.OrderLineItems;
 import com.ecommerce.order_service.exception.ResourceNotFoundException;
+import com.ecommerce.order_service.exception.ServiceUnavailableException;
 import com.ecommerce.order_service.external.client.ProductClient;
 import com.ecommerce.order_service.external.client.UserClient;
 import com.ecommerce.order_service.external.response.ProductDto;
 import com.ecommerce.order_service.repository.OrderRepository;
 import com.ecommerce.order_service.service.OrderService;
+import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -31,6 +33,7 @@ public class OrderServiceImpl implements OrderService {
 
     @Override
     @Transactional
+    @CircuitBreaker(name = "inventory", fallbackMethod = "placeOrderFallback")
     public OrderResponse placeOrder(OrderRequest orderRequest) {
         log.info("Placing order for user ID: {}", orderRequest.getUserId());
 
@@ -68,6 +71,17 @@ public class OrderServiceImpl implements OrderService {
         log.info("Order placed successfully with Order Number: {}", savedOrder.getOrderNumber());
 
         return mapToResponse(savedOrder);
+    }
+
+    public OrderResponse placeOrderFallback(OrderRequest orderRequest, Throwable throwable) {
+        log.error("Circuit Breaker triggered! Fallback executed because: {}", throwable.getMessage());
+
+        // in a synchronous architecture, if can't verify prices or deduct stock,
+        // cannot safely save the order. So reject it gracefully instead of a raw 500 error.
+        throw new ServiceUnavailableException(
+                "The Product or User service is currently unavailable. " +
+                        "Your order could not be placed at this time. Please try again in a few minutes."
+        );
     }
 
     @Override
