@@ -30,3 +30,9 @@ resilience4j:
         waitDurationInOpenState: 5s # wait 5 seconds before switching to HALF-OPEN to test the target
         permittedNumberOfCallsInHalfOpenState: 3 # allow 3 test calls in HALF-OPEN state
         automaticTransitionFromOpenToHalfOpenEnabled: true # automatically transition from OPEN to HALF-OPEN after the wait duration
+  kafka:
+    bootstrap-servers: localhost:9092
+    producer:
+      # using StringSerializer for keys and JsonSerializer for values to send JSON messages to Kafka
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer

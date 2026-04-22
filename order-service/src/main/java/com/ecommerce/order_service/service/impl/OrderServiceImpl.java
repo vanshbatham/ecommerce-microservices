@@ -5,6 +5,7 @@ import com.ecommerce.order_service.dto.request.OrderRequest;
 import com.ecommerce.order_service.dto.response.OrderResponse;
 import com.ecommerce.order_service.entity.Order;
 import com.ecommerce.order_service.entity.OrderLineItems;
+import com.ecommerce.order_service.event.OrderPlacedEvent;
 import com.ecommerce.order_service.exception.ResourceNotFoundException;
 import com.ecommerce.order_service.exception.ServiceUnavailableException;
 import com.ecommerce.order_service.external.client.ProductClient;
@@ -15,6 +16,7 @@ import com.ecommerce.order_service.service.OrderService;
 import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -30,6 +32,8 @@ public class OrderServiceImpl implements OrderService {
     private final OrderRepository orderRepository;
     private final ProductClient productClient;
     private final UserClient userClient;
+
+    private final KafkaTemplate<String, Object> kafkaTemplate;
 
     @Override
     @Transactional
@@ -69,6 +73,16 @@ public class OrderServiceImpl implements OrderService {
 
         Order savedOrder = orderRepository.save(order);
         log.info("Order placed successfully with Order Number: {}", savedOrder.getOrderNumber());
+
+        // construct event
+        OrderPlacedEvent event = OrderPlacedEvent.builder()
+                .orderNumber(savedOrder.getOrderNumber())
+                .userId(savedOrder.getUserId())
+                .build();
+
+        // broadcast the event to a specific topic
+        log.info("Publishing OrderPlacedEvent to Kafka topic 'order-placed-topic'");
+        kafkaTemplate.send("order-placed-topic", event);
 
         return mapToResponse(savedOrder);
     }
