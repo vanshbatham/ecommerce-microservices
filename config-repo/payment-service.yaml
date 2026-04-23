@@ -19,3 +19,7 @@ spring:
       value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
       properties:
         spring.json.trusted.packages: "*"
+        # tell Spring to ignore the Producer's package headers
+        spring.json.use.type.headers: false
+        # tell Spring exactly which local class to map the JSON into
+        spring.json.value.default.type: com.ecommerce.payment_service.event.OrderPlacedEvent
