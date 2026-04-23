@@ -1,0 +1,25 @@
+server:
+  port: 8080 # The Gateway runs on the standard HTTP port 8080
+
+spring:
+  cloud:
+    gateway:
+      discovery:
+        locator:
+          enabled: true # allows Gateway to use Eureka to find services
+          lower-case-service-id: true
+      routes:
+        - id: user-service-route
+          uri: lb://user-service
+          predicates:
+            - Path=/api/v1/users/**
+
+        - id: product-service-route
+          uri: lb://product-service
+          predicates:
+            - Path=/api/v1/products/**
+
+        - id: order-service-route
+          uri: lb://order-service
+          predicates:
+            - Path=/api/v1/orders/**
