@@ -4,22 +4,32 @@ server:
 spring:
   cloud:
     gateway:
-      discovery:
-        locator:
-          enabled: true # allows Gateway to use Eureka to find services
-          lower-case-service-id: true
       routes:
-        - id: user-service-route
-          uri: lb://user-service
-          predicates:
-            - Path=/api/v1/users/**
-
         - id: product-service-route
           uri: lb://product-service
           predicates:
             - Path=/api/v1/products/**
+          filters:
+            - AuthenticationFilter
 
         - id: order-service-route
           uri: lb://order-service
           predicates:
             - Path=/api/v1/orders/**
+          filters:
+            - AuthenticationFilter
+
+        - id: user-service-route
+          uri: lb://user-service
+          predicates:
+            - Path=/api/v1/users/**
+          # no filter here so users can still reach the login endpoint
+jwt:
+  secret: 404E635266556A586E3272357538782F413F4428472B4B6250645367566B5970
+
+# list of URLs that do not require a token
+app:
+  permit-all:
+    - /api/v1/users/login
+    - /api/v1/users/register
+    - /eureka/**

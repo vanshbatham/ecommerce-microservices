@@ -6,6 +6,7 @@ import com.ecommerce.user_service.entity.dto.response.UserResponse;
 import com.ecommerce.user_service.exception.DuplicateResourceException;
 import com.ecommerce.user_service.exception.ResourceNotFoundException;
 import com.ecommerce.user_service.repository.UserRepository;
+import com.ecommerce.user_service.security.JwtService;
 import com.ecommerce.user_service.service.UserService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -20,6 +21,17 @@ import java.util.stream.Collectors;
 public class UserServiceImpl implements UserService {
 
     private final UserRepository userRepository;
+
+    private final JwtService jwtService;
+
+    @Override
+    public String loginUser(String email) {
+        log.info("Attempting login for email: {}", email);
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new ResourceNotFoundException("User not found with email: " + email));
+
+        return jwtService.generateToken(user.getEmail(), user.getId());
+    }
 
     @Override
     public UserResponse createUser(UserRequest request) {

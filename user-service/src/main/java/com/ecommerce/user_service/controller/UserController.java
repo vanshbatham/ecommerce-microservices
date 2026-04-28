@@ -1,6 +1,8 @@
 package com.ecommerce.user_service.controller;
 
 
+import com.ecommerce.user_service.dto.request.LoginRequest;
+import com.ecommerce.user_service.dto.response.LoginResponse;
 import com.ecommerce.user_service.entity.dto.request.UserRequest;
 import com.ecommerce.user_service.entity.dto.response.UserResponse;
 import com.ecommerce.user_service.service.UserService;
@@ -18,6 +20,12 @@ import java.util.List;
 public class UserController {
 
     private final UserService userService;
+
+    @PostMapping("/login")
+    public ResponseEntity<LoginResponse> login(@Valid @RequestBody LoginRequest request) {
+        String token = userService.loginUser(request.getEmail());
+        return ResponseEntity.ok(LoginResponse.builder().token(token).build());
+    }
 
     @PostMapping
     public ResponseEntity<UserResponse> createUser(@Valid @RequestBody UserRequest request) {

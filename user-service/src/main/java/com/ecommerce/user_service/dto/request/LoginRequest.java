@@ -1,0 +1,13 @@
+package com.ecommerce.user_service.dto.request;
+
+import jakarta.validation.constraints.NotBlank;
+import lombok.Getter;
+import lombok.Setter;
+
+@Getter
+@Setter
+public class LoginRequest {
+
+    @NotBlank(message = "Email is required")
+    private String email;
+}
