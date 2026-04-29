@@ -1,4 +1,4 @@
-package com.ecommerce.user_service.entity.dto.response;
+package com.ecommerce.user_service.dto.response;
 
 import lombok.Builder;
 import lombok.Data;

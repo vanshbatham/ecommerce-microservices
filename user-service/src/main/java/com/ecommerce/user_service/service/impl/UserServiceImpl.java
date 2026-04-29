@@ -1,8 +1,10 @@
 package com.ecommerce.user_service.service.impl;
 
+import com.ecommerce.user_service.dto.request.LoginRequest;
+import com.ecommerce.user_service.dto.request.RegisterRequest;
+import com.ecommerce.user_service.dto.response.UserResponse;
 import com.ecommerce.user_service.entity.User;
-import com.ecommerce.user_service.entity.dto.request.UserRequest;
-import com.ecommerce.user_service.entity.dto.response.UserResponse;
+import com.ecommerce.user_service.exception.BadCredentialsException;
 import com.ecommerce.user_service.exception.DuplicateResourceException;
 import com.ecommerce.user_service.exception.ResourceNotFoundException;
 import com.ecommerce.user_service.repository.UserRepository;
@@ -10,6 +12,7 @@ import com.ecommerce.user_service.security.JwtService;
 import com.ecommerce.user_service.service.UserService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -24,17 +27,10 @@ public class UserServiceImpl implements UserService {
 
     private final JwtService jwtService;
 
-    @Override
-    public String loginUser(String email) {
-        log.info("Attempting login for email: {}", email);
-        User user = userRepository.findByEmail(email)
-                .orElseThrow(() -> new ResourceNotFoundException("User not found with email: " + email));
-
-        return jwtService.generateToken(user.getEmail(), user.getId());
-    }
+    private final PasswordEncoder passwordEncoder;
 
     @Override
-    public UserResponse createUser(UserRequest request) {
+    public UserResponse registerUser(RegisterRequest request) {
         log.info("Creating new user with email: {}", request.getEmail());
 
         if (userRepository.existsByEmail(request.getEmail())) {
@@ -49,12 +45,29 @@ public class UserServiceImpl implements UserService {
                 .firstName(request.getFirstName())
                 .lastName(request.getLastName())
                 .email(request.getEmail())
+                .password(passwordEncoder.encode(request.getPassword()))
                 .phoneNumber(request.getPhoneNumber())
                 .build();
 
         User savedUser = userRepository.save(user);
         return mapToResponse(savedUser);
     }
+
+    public String loginUser(LoginRequest request) {
+        log.info("Attempting login for email: {}", request.getEmail());
+
+        User user = userRepository.findByEmail(request.getEmail())
+                .orElseThrow(() -> new BadCredentialsException("Invalid credentials"));
+
+        if (!passwordEncoder.matches(request.getPassword(), user.getPassword())) {
+            log.warn("Password mismatch for email: {}", request.getEmail());
+            throw new BadCredentialsException("Invalid credentials");
+        }
+
+        log.info("Login successful. Generating JWT.");
+        return jwtService.generateToken(user.getEmail(), user.getId());
+    }
+
 
     @Override
     public UserResponse getUserById(Long id) {

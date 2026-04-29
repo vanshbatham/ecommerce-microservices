@@ -1,11 +1,14 @@
-package com.ecommerce.user_service.entity.dto.request;
+package com.ecommerce.user_service.dto.request;
 
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
-import lombok.Data;
+import lombok.Getter;
+import lombok.Setter;
 
-@Data
-public class UserRequest {
+@Getter
+@Setter
+public class RegisterRequest {
+
     @NotBlank(message = "First name is required")
     private String firstName;
 
@@ -13,8 +16,13 @@ public class UserRequest {
     private String lastName;
 
     @NotBlank(message = "Email is required")
-    @Email(message = "Invalid email format")
+    @Email
     private String email;
 
+    @NotBlank(message = "Phone number is required")
     private String phoneNumber;
+
+    @NotBlank(message = "Password is required")
+    private String password;
+
 }

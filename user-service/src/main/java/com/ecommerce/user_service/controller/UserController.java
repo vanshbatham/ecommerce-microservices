@@ -2,9 +2,9 @@ package com.ecommerce.user_service.controller;
 
 
 import com.ecommerce.user_service.dto.request.LoginRequest;
+import com.ecommerce.user_service.dto.request.RegisterRequest;
 import com.ecommerce.user_service.dto.response.LoginResponse;
-import com.ecommerce.user_service.entity.dto.request.UserRequest;
-import com.ecommerce.user_service.entity.dto.response.UserResponse;
+import com.ecommerce.user_service.dto.response.UserResponse;
 import com.ecommerce.user_service.service.UserService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -23,13 +23,13 @@ public class UserController {
 
     @PostMapping("/login")
     public ResponseEntity<LoginResponse> login(@Valid @RequestBody LoginRequest request) {
-        String token = userService.loginUser(request.getEmail());
+        String token = userService.loginUser(request);
         return ResponseEntity.ok(LoginResponse.builder().token(token).build());
     }
 
-    @PostMapping
-    public ResponseEntity<UserResponse> createUser(@Valid @RequestBody UserRequest request) {
-        return new ResponseEntity<>(userService.createUser(request), HttpStatus.CREATED);
+    @PostMapping("/register")
+    public ResponseEntity<UserResponse> registerUser(@Valid @RequestBody RegisterRequest request) {
+        return new ResponseEntity<>(userService.registerUser(request), HttpStatus.CREATED);
     }
 
     @GetMapping("/{id}")
