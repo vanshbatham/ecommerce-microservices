@@ -1,4 +1,5 @@
 services:
+  # ---------------- INFRASTRUCTURE ----------------
   kafka:
     image: apache/kafka:3.7.0
     container_name: kafka
@@ -7,9 +8,8 @@ services:
     environment:
       - KAFKA_NODE_ID=0
       - KAFKA_PROCESS_ROLES=broker,controller
-      # Bound to 0.0.0.0 to accept traffic from outside the Docker container
       - KAFKA_LISTENERS=PLAINTEXT://0.0.0.0:9092,CONTROLLER://0.0.0.0:9093
-      - KAFKA_ADVERTISED_LISTENERS=PLAINTEXT://localhost:9092
+      - KAFKA_ADVERTISED_LISTENERS=PLAINTEXT://kafka:9092 # Changed to kafka
       - KAFKA_CONTROLLER_LISTENER_NAMES=CONTROLLER
       - KAFKA_LISTENER_SECURITY_PROTOCOL_MAP=CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT
       - KAFKA_CONTROLLER_QUORUM_VOTERS=0@kafka:9093
@@ -17,16 +17,95 @@ services:
       - KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR=1
       - KAFKA_TRANSACTION_STATE_LOG_MIN_ISR=1
       - KAFKA_LOG_DIRS=/var/lib/kafka/data
-      # The missing piece required for KRaft to initialize storage
       - CLUSTER_ID=ciWW7b2-Q2e7a3V3LhVb6w
-    volumes:
-      - kafka_data:/var/lib/kafka/data
+
   zipkin:
     image: openzipkin/zipkin:latest
     container_name: zipkin
     ports:
-      - "9411:9411" # Standard Zipkin UI port
+      - "9411:9411"
 
+  # ---------------- SPRING CLOUD CORE ----------------
+  config-server:
+    build: ./configserver
+    container_name: config-server
+    ports:
+      - "8888:8888"
+    volumes:
+      # mounts local Git repo into the Linux container
+      - ./config-repo:/config-repo
+    environment:
+      - SPRING_CLOUD_CONFIG_SERVER_GIT_URI=file:///config-repo
 
-volumes:
-  kafka_data:
+  eureka-server:
+    build: ./discoveryserver
+    container_name: eureka-server
+    ports:
+      - "8761:8761"
+    depends_on:
+      - config-server
+
+  api-gateway:
+    build: ./api-gateway
+    container_name: api-gateway
+    ports:
+      - "8080:8080"
+    environment:
+      - CONFIG_SERVER_URL=http://config-server:8888
+      - EUREKA_URL=http://eureka-server:8761/eureka/
+    depends_on:
+      - config-server
+      - eureka-server
+
+  # ---------------- MICROSERVICES ----------------
+  user-service:
+    build: ./user-service
+    container_name: user-service
+    ports:
+      - "8081:8081"
+    environment:
+      - CONFIG_SERVER_URL=http://config-server:8888
+      - EUREKA_URL=http://eureka-server:8761/eureka/
+    depends_on:
+      - config-server
+      - eureka-server
+
+  product-service:
+    build: ./product-service
+    container_name: product-service
+    ports:
+      - "8082:8082"
+    environment:
+      - CONFIG_SERVER_URL=http://config-server:8888
+      - EUREKA_URL=http://eureka-server:8761/eureka/
+    depends_on:
+      - config-server
+      - eureka-server
+
+  order-service:
+    build: ./order-service
+    container_name: order-service
+    ports:
+      - "8083:8083"
+    environment:
+      - CONFIG_SERVER_URL=http://config-server:8888
+      - EUREKA_URL=http://eureka-server:8761/eureka/
+      - SPRING_KAFKA_BOOTSTRAP_SERVERS=kafka:9092
+    depends_on:
+      - config-server
+      - eureka-server
+      - kafka
+
+  payment-service:
+    build: ./payment-service
+    container_name: payment-service
+    ports:
+      - "8084:8084"
+    environment:
+      - CONFIG_SERVER_URL=http://config-server:8888
+      - EUREKA_URL=http://eureka-server:8761/eureka/
+      - SPRING_KAFKA_BOOTSTRAP_SERVERS=kafka:9092
+    depends_on:
+      - config-server
+      - eureka-server
+      - kafka
