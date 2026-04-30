@@ -21,6 +21,12 @@ services:
       - CLUSTER_ID=ciWW7b2-Q2e7a3V3LhVb6w
     volumes:
       - kafka_data:/var/lib/kafka/data
+  zipkin:
+    image: openzipkin/zipkin:latest
+    container_name: zipkin
+    ports:
+      - "9411:9411" # Standard Zipkin UI port
+
 
 volumes:
   kafka_data:
